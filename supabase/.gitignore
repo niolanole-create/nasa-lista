@@ -1,0 +1,6 @@
+# Supabase CLI artefakti
+.branches
+.temp
+
+# Env fajlovi
+.env
