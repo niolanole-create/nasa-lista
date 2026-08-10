@@ -1,6 +1,6 @@
-// Ručno pisani tipovi baze za Fazu 1 (couples, profiles + RPC).
-// Napomena: `supabase gen types` sada traži Docker; kad šema poraste
-// (Faza 2+), preći na auto-generisanje uz Docker ili access token.
+// Ručno pisani tipovi baze (Faze 1–2).
+// Napomena: `supabase gen types` sada traži Docker; kad zatreba, preći na
+// auto-generisanje. Do tada: menjaš šemu → ažuriraj i ovaj fajl.
 
 export type Json =
   | string
@@ -9,6 +9,19 @@ export type Json =
   | null
   | { [key: string]: Json | undefined }
   | Json[];
+
+export type ActivityStatus =
+  "proposed" | "accepted" | "declined" | "scheduled" | "completed" | "archived";
+export type ResponseType = "yes" | "no" | "maybe";
+export type Category =
+  | "izlazak"
+  | "putovanje"
+  | "hrana"
+  | "kultura"
+  | "aktivnost"
+  | "kod_kuce"
+  | "ostalo";
+export type Effort = "spontano" | "treba_planirati" | "veliki_poduhvat";
 
 export interface Database {
   public: {
@@ -64,6 +77,106 @@ export interface Database {
         };
         Relationships: [];
       };
+      activities: {
+        Row: {
+          id: string;
+          couple_id: string;
+          created_by: string;
+          title: string;
+          description: string | null;
+          category: Category;
+          effort: Effort;
+          estimated_cost: number | null;
+          location_name: string | null;
+          location_url: string | null;
+          reference_url: string | null;
+          deadline: string | null;
+          status: ActivityStatus;
+          scheduled_at: string | null;
+          completed_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          couple_id?: string;
+          created_by?: string;
+          title: string;
+          description?: string | null;
+          category?: Category;
+          effort?: Effort;
+          estimated_cost?: number | null;
+          location_name?: string | null;
+          location_url?: string | null;
+          reference_url?: string | null;
+          deadline?: string | null;
+          status?: ActivityStatus;
+          scheduled_at?: string | null;
+          completed_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          title?: string;
+          description?: string | null;
+          category?: Category;
+          effort?: Effort;
+          estimated_cost?: number | null;
+          location_name?: string | null;
+          location_url?: string | null;
+          reference_url?: string | null;
+          deadline?: string | null;
+          status?: ActivityStatus;
+          scheduled_at?: string | null;
+          completed_at?: string | null;
+        };
+        Relationships: [];
+      };
+      responses: {
+        Row: {
+          id: string;
+          activity_id: string;
+          user_id: string;
+          response: ResponseType;
+          note: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          activity_id: string;
+          user_id?: string;
+          response: ResponseType;
+          note?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          response?: ResponseType;
+          note?: string | null;
+        };
+        Relationships: [];
+      };
+      activity_events: {
+        Row: {
+          id: string;
+          activity_id: string;
+          actor_id: string | null;
+          event_type: string;
+          payload: Json;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          activity_id: string;
+          actor_id?: string | null;
+          event_type: string;
+          payload?: Json;
+          created_at?: string;
+        };
+        Update: {
+          payload?: Json;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -79,11 +192,24 @@ export interface Database {
         Args: Record<string, never>;
         Returns: string;
       };
+      revive_activity: {
+        Args: { activity_id: string };
+        Returns: Database["public"]["Tables"]["activities"]["Row"];
+      };
     };
-    Enums: Record<string, never>;
+    Enums: {
+      activity_status: ActivityStatus;
+      response_type: ResponseType;
+      category: Category;
+      effort: Effort;
+    };
     CompositeTypes: Record<string, never>;
   };
 }
 
 export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 export type Couple = Database["public"]["Tables"]["couples"]["Row"];
+export type Activity = Database["public"]["Tables"]["activities"]["Row"];
+export type Response = Database["public"]["Tables"]["responses"]["Row"];
+export type ActivityEvent =
+  Database["public"]["Tables"]["activity_events"]["Row"];

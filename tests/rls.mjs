@@ -173,6 +173,66 @@ async function run() {
     .select("id")
     .eq("id", coupleA.id);
   expect((nasPar?.length ?? 0) === 1, "B vidi svoj par");
+
+  console.log("\nAktivnosti i odgovori (Faza 2)");
+  // A pravi aktivnost u paru A (couple_id/created_by iz DB default-a).
+  const { data: akt, error: eAkt } = await A.client
+    .from("activities")
+    .insert({ title: "Test ideja A" })
+    .select()
+    .single();
+  expect(!eAkt && !!akt?.id, "A pravi aktivnost u svom paru", eAkt?.message);
+  const aktId = akt?.id;
+
+  // B (partner) vidi aktivnost; C (drugi par) ne vidi.
+  const { data: bVidi } = await B.client
+    .from("activities")
+    .select("id")
+    .eq("id", aktId);
+  expect((bVidi?.length ?? 0) === 1, "B vidi aktivnost svog para");
+
+  const { data: cVidi } = await C.client
+    .from("activities")
+    .select("id")
+    .eq("id", aktId);
+  expect((cVidi?.length ?? 0) === 0, "C NE vidi aktivnost tuđeg para");
+
+  // Autor ne sme da glasa na svoj predlog.
+  const { error: eAutorGlas } = await A.client
+    .from("responses")
+    .insert({ activity_id: aktId, response: "yes" });
+  expect(!!eAutorGlas, "Autor NE može da glasa na svoj predlog", "prošlo je");
+
+  // C (tuđi par) ne sme da odgovori na A-inu aktivnost.
+  const { error: eTudjiGlas } = await C.client
+    .from("responses")
+    .insert({ activity_id: aktId, response: "yes" });
+  expect(!!eTudjiGlas, "C NE može da odgovori na tuđu aktivnost", "prošlo je");
+
+  // B odgovara „Hoću" → aktivnost prelazi u accepted (trigger).
+  const { error: eBGlas } = await B.client
+    .from("responses")
+    .insert({ activity_id: aktId, response: "yes" });
+  expect(!eBGlas, "B može da odgovori na predlog partnera", eBGlas?.message);
+
+  const { data: aktPosle } = await admin
+    .from("activities")
+    .select("status")
+    .eq("id", aktId)
+    .single();
+  expect(
+    aktPosle?.status === "accepted",
+    "Aktivnost prelazi u accepted kad partner kaže „Hoću”",
+    `status je ${aktPosle?.status}`,
+  );
+
+  // C ne sme da menja tuđu aktivnost.
+  const { data: cIzmena } = await C.client
+    .from("activities")
+    .update({ title: "HAKOVANO" })
+    .eq("id", aktId)
+    .select();
+  expect((cIzmena?.length ?? 0) === 0, "C NE može da izmeni tuđu aktivnost");
 }
 
 async function cleanupAll() {
