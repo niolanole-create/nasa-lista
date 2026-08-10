@@ -1,25 +1,53 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
-type Stanje = "idle" | "slanje" | "poslato" | "greska";
+type Korak = "email" | "kod";
 
 export default function Prijava() {
+  const router = useRouter();
+  const [korak, setKorak] = useState<Korak>("email");
   const [email, setEmail] = useState("");
-  const [stanje, setStanje] = useState<Stanje>("idle");
+  const [kod, setKod] = useState("");
+  const [radim, setRadim] = useState(false);
+  const [greska, setGreska] = useState<string | null>(null);
 
-  async function posalji(e: React.FormEvent) {
+  async function posaljiKod(e: React.FormEvent) {
     e.preventDefault();
-    setStanje("slanje");
+    setRadim(true);
+    setGreska(null);
     const supabase = createClient();
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/confirm`,
-      },
+      options: { shouldCreateUser: true },
     });
-    setStanje(error ? "greska" : "poslato");
+    setRadim(false);
+    if (error) {
+      setGreska(error.message);
+      return;
+    }
+    setKorak("kod");
+  }
+
+  async function potvrdiKod(e: React.FormEvent) {
+    e.preventDefault();
+    setRadim(true);
+    setGreska(null);
+    const supabase = createClient();
+    const { error } = await supabase.auth.verifyOtp({
+      email,
+      token: kod.trim(),
+      type: "email",
+    });
+    if (error) {
+      setGreska("Kod nije ispravan ili je istekao. Zatraži novi.");
+      setRadim(false);
+      return;
+    }
+    router.replace("/");
+    router.refresh();
   }
 
   return (
@@ -36,13 +64,8 @@ export default function Prijava() {
           Naša lista
         </h1>
 
-        {stanje === "poslato" ? (
-          <p className="mt-8 rounded-2xl bg-surface p-5 text-center leading-relaxed">
-            Poslali smo ti link na <strong>{email}</strong>. Otvori ga na ovom
-            telefonu da se prijaviš.
-          </p>
-        ) : (
-          <form onSubmit={posalji} className="mt-8 flex flex-col gap-3">
+        {korak === "email" ? (
+          <form onSubmit={posaljiKod} className="mt-8 flex flex-col gap-3">
             <label htmlFor="email" className="text-sm text-muted">
               Tvoj e-mail
             </label>
@@ -59,16 +82,53 @@ export default function Prijava() {
             />
             <button
               type="submit"
-              disabled={stanje === "slanje"}
+              disabled={radim}
               className="min-h-[44px] rounded-xl bg-accent-a px-4 font-medium text-white transition-opacity disabled:opacity-60"
             >
-              {stanje === "slanje" ? "Šaljem…" : "Pošalji mi link za prijavu"}
+              {radim ? "Šaljem…" : "Pošalji mi kod"}
             </button>
-            {stanje === "greska" && (
-              <p className="text-sm text-accent-b">
-                Nešto nije u redu. Pokušaj ponovo za koji trenutak.
-              </p>
-            )}
+            {greska && <p className="text-sm text-accent-b">{greska}</p>}
+          </form>
+        ) : (
+          <form onSubmit={potvrdiKod} className="mt-8 flex flex-col gap-3">
+            <p className="text-center leading-relaxed text-muted">
+              Poslali smo šestocifreni kod na <strong>{email}</strong>. Unesi ga
+              ovde.
+            </p>
+            <label htmlFor="kod" className="text-sm text-muted">
+              Kod iz mejla
+            </label>
+            <input
+              id="kod"
+              type="text"
+              required
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              value={kod}
+              onChange={(e) => setKod(e.target.value.replace(/\D/g, ""))}
+              placeholder="123456"
+              maxLength={6}
+              className="min-h-[44px] rounded-xl border border-border bg-surface px-4 text-center font-mono text-xl tracking-[0.4em] outline-none focus:border-accent-a"
+            />
+            <button
+              type="submit"
+              disabled={radim}
+              className="min-h-[44px] rounded-xl bg-accent-a px-4 font-medium text-white transition-opacity disabled:opacity-60"
+            >
+              {radim ? "Proveravam…" : "Prijavi se"}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setKorak("email");
+                setKod("");
+                setGreska(null);
+              }}
+              className="text-sm text-muted underline"
+            >
+              Promeni e-mail / pošalji ponovo
+            </button>
+            {greska && <p className="text-sm text-accent-b">{greska}</p>}
           </form>
         )}
       </div>
