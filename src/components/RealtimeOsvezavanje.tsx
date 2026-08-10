@@ -31,6 +31,11 @@ export default function RealtimeOsvezavanje({
         { event: "*", schema: "public", table: "responses" },
         () => router.refresh(),
       )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "date_proposals" },
+        () => router.refresh(),
+      )
       .subscribe();
 
     return () => {

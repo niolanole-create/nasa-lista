@@ -19,6 +19,18 @@ export function barBackground(activity: Activity, members: Profile[]): string {
   return accentOf(activity.created_by, members);
 }
 
+// Pun datum i vreme: „pet, 15.09.2026. u 20:00".
+export function formatDatumVreme(iso: string): string {
+  return new Date(iso).toLocaleString("sr-RS", {
+    weekday: "short",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 // „za 4 dana", „danas", „pre 2 dana" — relativan opis datuma.
 export function relativniDatum(iso: string): string {
   const cilj = new Date(iso);

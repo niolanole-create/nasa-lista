@@ -1,9 +1,15 @@
 import { notFound } from "next/navigation";
 import { getCoupleContext } from "@/lib/couple";
-import type { Activity, Response, ActivityEvent } from "@/lib/database.types";
+import type {
+  Activity,
+  Response,
+  ActivityEvent,
+  DateProposal,
+} from "@/lib/database.types";
 import OdgovorDugmad from "@/components/OdgovorDugmad";
 import AkcijeAktivnosti from "@/components/AkcijeAktivnosti";
-import { barBackground } from "@/lib/ui";
+import TerminSekcija from "@/components/TerminSekcija";
+import { barBackground, formatDatumVreme } from "@/lib/ui";
 import {
   CATEGORY_EMOJI,
   CATEGORY_LABEL,
@@ -41,6 +47,13 @@ export default async function Detalj({
     .select("*")
     .eq("activity_id", id)
     .order("created_at", { ascending: true });
+
+  const { data: proposalsData } = await supabase
+    .from("date_proposals")
+    .select("*")
+    .eq("activity_id", id)
+    .order("created_at", { ascending: false });
+  const proposals = (proposalsData ?? []) as DateProposal[];
 
   const jaAutor = activity.created_by === userId;
   const mojOdgovor =
@@ -136,6 +149,18 @@ export default async function Detalj({
         </div>
       </article>
 
+      {(activity.status === "accepted" || activity.status === "scheduled") &&
+        userId && (
+          <TerminSekcija
+            activityId={activity.id}
+            status={activity.status}
+            scheduledAt={activity.scheduled_at}
+            userId={userId}
+            proposals={proposals}
+            members={members}
+          />
+        )}
+
       <div className="mt-5">
         <AkcijeAktivnosti activityId={activity.id} status={activity.status} />
       </div>
@@ -154,6 +179,10 @@ export default async function Detalj({
               tekst = `${ko}: ${RESP_LABEL[p.response] ?? p.response}`;
             else if (e.event_type === "status_changed")
               tekst = `→ ${STATUS_LABEL[p.to as keyof typeof STATUS_LABEL] ?? p.to}`;
+            else if (e.event_type === "date_proposed")
+              tekst = `${ko} predložio/la termin: ${formatDatumVreme(p.proposed_at)}`;
+            else if (e.event_type === "schedule_cancelled")
+              tekst = `${ko} otkazao/la termin — ${p.reason}`;
             return (
               <li key={e.id} className="flex justify-between gap-3 text-muted">
                 <span>{tekst}</span>

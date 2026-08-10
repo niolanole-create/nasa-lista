@@ -22,6 +22,7 @@ export type Category =
   | "kod_kuce"
   | "ostalo";
 export type Effort = "spontano" | "treba_planirati" | "veliki_poduhvat";
+export type ProposalStatus = "pending" | "accepted" | "rejected" | "superseded";
 
 export interface Database {
   public: {
@@ -177,6 +178,34 @@ export interface Database {
         };
         Relationships: [];
       };
+      date_proposals: {
+        Row: {
+          id: string;
+          activity_id: string;
+          proposed_by: string;
+          proposed_at: string;
+          note: string | null;
+          status: ProposalStatus;
+          responded_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          activity_id: string;
+          proposed_by?: string;
+          proposed_at: string;
+          note?: string | null;
+          status?: ProposalStatus;
+          responded_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          status?: ProposalStatus;
+          note?: string | null;
+          responded_at?: string | null;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -196,12 +225,29 @@ export interface Database {
         Args: { activity_id: string };
         Returns: Database["public"]["Tables"]["activities"]["Row"];
       };
+      propose_date: {
+        Args: {
+          p_activity_id: string;
+          p_proposed_at: string;
+          p_note?: string | null;
+        };
+        Returns: Database["public"]["Tables"]["date_proposals"]["Row"];
+      };
+      accept_date: {
+        Args: { p_proposal_id: string };
+        Returns: Database["public"]["Tables"]["activities"]["Row"];
+      };
+      cancel_schedule: {
+        Args: { p_activity_id: string; p_reason: string };
+        Returns: Database["public"]["Tables"]["activities"]["Row"];
+      };
     };
     Enums: {
       activity_status: ActivityStatus;
       response_type: ResponseType;
       category: Category;
       effort: Effort;
+      proposal_status: ProposalStatus;
     };
     CompositeTypes: Record<string, never>;
   };
@@ -213,3 +259,5 @@ export type Activity = Database["public"]["Tables"]["activities"]["Row"];
 export type Response = Database["public"]["Tables"]["responses"]["Row"];
 export type ActivityEvent =
   Database["public"]["Tables"]["activity_events"]["Row"];
+export type DateProposal =
+  Database["public"]["Tables"]["date_proposals"]["Row"];

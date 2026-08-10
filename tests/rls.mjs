@@ -233,6 +233,68 @@ async function run() {
     .eq("id", aktId)
     .select();
   expect((cIzmena?.length ?? 0) === 0, "C NE može da izmeni tuđu aktivnost");
+
+  console.log("\nTermini (Faza 3)");
+  const kada = "2027-06-15T18:00:00.000Z";
+  const { data: predlog, error: ePred } = await A.client.rpc("propose_date", {
+    p_activity_id: aktId,
+    p_proposed_at: kada,
+  });
+  expect(!ePred && !!predlog?.id, "A predlaže termin", ePred?.message);
+
+  const { error: eSam } = await A.client.rpc("accept_date", {
+    p_proposal_id: predlog.id,
+  });
+  expect(!!eSam, "Predlagač NE može sam da potvrdi svoj termin", "prošlo je");
+
+  const { error: eCpred } = await C.client.rpc("propose_date", {
+    p_activity_id: aktId,
+    p_proposed_at: kada,
+  });
+  expect(
+    !!eCpred,
+    "C NE može da predlaže termin na tuđoj aktivnosti",
+    "prošlo je",
+  );
+
+  const { error: eAcc } = await B.client.rpc("accept_date", {
+    p_proposal_id: predlog.id,
+  });
+  expect(!eAcc, "B (drugi partner) potvrđuje termin", eAcc?.message);
+
+  const { data: aktSched } = await admin
+    .from("activities")
+    .select("status, scheduled_at")
+    .eq("id", aktId)
+    .single();
+  expect(
+    aktSched?.status === "scheduled" && !!aktSched?.scheduled_at,
+    "Aktivnost je SCHEDULED tek posle druge, nezavisne potvrde",
+    `status ${aktSched?.status}`,
+  );
+
+  const { error: eNoReason } = await A.client.rpc("cancel_schedule", {
+    p_activity_id: aktId,
+    p_reason: "",
+  });
+  expect(!!eNoReason, "Otkazivanje BEZ razloga nije dozvoljeno", "prošlo je");
+
+  const { error: eCancel } = await A.client.rpc("cancel_schedule", {
+    p_activity_id: aktId,
+    p_reason: "Iskrsla obaveza",
+  });
+  expect(!eCancel, "Otkazivanje sa razlogom uspeva", eCancel?.message);
+
+  const { data: aktBack } = await admin
+    .from("activities")
+    .select("status, scheduled_at")
+    .eq("id", aktId)
+    .single();
+  expect(
+    aktBack?.status === "accepted" && !aktBack?.scheduled_at,
+    "Otkazan termin vraća aktivnost u ACCEPTED",
+    `status ${aktBack?.status}`,
+  );
 }
 
 async function cleanupAll() {

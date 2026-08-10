@@ -30,15 +30,19 @@ export default async function AppLayout({
         <Link href="/" className="font-display text-lg font-semibold">
           Naša lista
         </Link>
-        <nav className="flex items-center gap-4 text-sm">
+        <nav className="flex items-center gap-3 text-sm">
           <Link href="/ideje" className="text-muted hover:text-foreground">
-            Naše ideje
+            Ideje
+          </Link>
+          <Link href="/kalendar" className="text-muted hover:text-foreground">
+            Kalendar
           </Link>
           <Link
             href="/podesavanja"
             className="text-muted hover:text-foreground"
+            aria-label="Podešavanja"
           >
-            Podešavanja
+            ⚙️
           </Link>
           <OdjavaButton />
         </nav>
