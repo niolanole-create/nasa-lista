@@ -21,7 +21,7 @@ export const DEV_USERS = [
   { email: "marko@example.com", name: "Nikola", accent: "#B0335F" },
   { email: "ana@example.com", name: "Jelena", accent: "#0F6B6B" },
 ];
-const DEV_PASSWORD = "sviđamiseNikolamnogo";
+const DEV_PASSWORD = "Nikolamisesviđa";
 const COUPLE_NAME = "Nikola i Jelena";
 const INVITE_CODE = "ANAMARKO";
 
