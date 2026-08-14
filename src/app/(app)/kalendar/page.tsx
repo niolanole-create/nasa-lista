@@ -9,17 +9,23 @@ export default async function KalendarStrana() {
   const { data } = await supabase
     .from("activities")
     .select("*")
-    .in("status", ["scheduled", "accepted"]);
+    .in("status", ["scheduled", "accepted", "completed"]);
 
   const sve = (data ?? []) as Activity[];
 
+  // Termini: zakazane i završene aktivnosti (obe imaju datum iz kalendara).
   const termini = sve
-    .filter((a) => a.status === "scheduled" && a.scheduled_at)
+    .filter(
+      (a) =>
+        (a.status === "scheduled" || a.status === "completed") &&
+        a.scheduled_at,
+    )
     .map((a) => ({
       id: a.id,
       title: a.title,
       scheduledAt: a.scheduled_at!,
       color: accentOf(a.created_by, members),
+      done: a.status === "completed",
     }));
 
   const ideje = sve

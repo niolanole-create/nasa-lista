@@ -6,7 +6,13 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { formatDatumVreme, relativniDatum } from "@/lib/ui";
 
-type Termin = { id: string; title: string; scheduledAt: string; color: string };
+type Termin = {
+  id: string;
+  title: string;
+  scheduledAt: string;
+  color: string;
+  done: boolean;
+};
 type Ideja = { id: string; title: string };
 
 const MESECI = [
@@ -68,16 +74,15 @@ export default function Kalendar({
     setIzabraniDan(null);
   }
 
-  async function predloziZaDan() {
+  async function zakaziZaDan() {
     if (!ideja || !izabraniDan) return;
     setRadim(true);
-    // podrazumevano 20:00 lokalno
+    // podrazumevano 20:00 lokalno; zakazuje direktno (bez dvostruke potvrde)
     const iso = new Date(`${izabraniDan}T20:00`).toISOString();
-    const supabase = createClient();
-    await supabase.rpc("propose_date", {
-      p_activity_id: ideja,
-      p_proposed_at: iso,
-    });
+    await createClient()
+      .from("activities")
+      .update({ status: "scheduled", scheduled_at: iso })
+      .eq("id", ideja);
     setRadim(false);
     setIzabraniDan(null);
     setIdeja("");
@@ -85,7 +90,9 @@ export default function Kalendar({
   }
 
   const nadolazeci = [...termini]
-    .filter((t) => new Date(t.scheduledAt) >= new Date(danas.toDateString()))
+    .filter(
+      (t) => !t.done && new Date(t.scheduledAt) >= new Date(danas.toDateString()),
+    )
     .sort((a, b) => a.scheduledAt.localeCompare(b.scheduledAt));
 
   const daniIzabranog = izabraniDan ? (poDanu.get(izabraniDan) ?? []) : [];
@@ -144,7 +151,7 @@ export default function Kalendar({
                   {ima.slice(0, 3).map((t) => (
                     <span
                       key={t.id}
-                      className="h-1 w-1 rounded-full"
+                      className={`h-1 w-1 rounded-full ${t.done ? "opacity-40" : ""}`}
                       style={{ backgroundColor: t.color }}
                     />
                   ))}
@@ -166,7 +173,11 @@ export default function Kalendar({
                     href={`/aktivnost/${t.id}`}
                     className="text-accent-a underline"
                   >
-                    {t.title} · {formatDatumVreme(t.scheduledAt)}
+                    {t.done && "✓ "}
+                    <span className={t.done ? "line-through" : ""}>
+                      {t.title}
+                    </span>{" "}
+                    · {formatDatumVreme(t.scheduledAt)}
                   </Link>
                 </li>
               ))}
@@ -175,7 +186,7 @@ export default function Kalendar({
           {ideje.length > 0 ? (
             <div className="mt-3 flex flex-col gap-2">
               <label className="text-sm text-muted">
-                Predloži termin za ovaj dan (20:00):
+                Zakaži za ovaj dan (20:00):
               </label>
               <div className="flex gap-2">
                 <select
@@ -192,11 +203,11 @@ export default function Kalendar({
                 </select>
                 <button
                   type="button"
-                  onClick={predloziZaDan}
+                  onClick={zakaziZaDan}
                   disabled={!ideja || radim}
                   className="min-h-[44px] rounded-lg bg-accent-a px-4 text-sm font-medium text-white disabled:opacity-60"
                 >
-                  Predloži
+                  Zakaži
                 </button>
               </div>
             </div>

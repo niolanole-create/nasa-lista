@@ -4,7 +4,7 @@ import type { Activity, Category, Effort } from "@/lib/database.types";
 import Kartica from "@/components/Kartica";
 import FilterKontrole from "@/components/FilterKontrole";
 import StaCemoVeceras from "@/components/StaCemoVeceras";
-import ZavrsiToggle from "@/components/ZavrsiToggle";
+import ZavrsiButton from "@/components/ZavrsiButton";
 
 type SP = Promise<{ kat?: string; trud?: string; ko?: string; sort?: string }>;
 
@@ -70,7 +70,11 @@ export default async function Ideje({ searchParams }: { searchParams: SP }) {
         ) : (
           ideje.map((a) => (
             <Kartica key={a.id} activity={a} members={members}>
-              <ZavrsiToggle activityId={a.id} completed={false} />
+              <ZavrsiButton
+                activityId={a.id}
+                scheduledAt={a.scheduled_at}
+                completed={false}
+              />
             </Kartica>
           ))
         )}

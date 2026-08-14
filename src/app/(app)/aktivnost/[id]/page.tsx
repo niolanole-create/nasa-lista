@@ -1,12 +1,21 @@
 import { notFound } from "next/navigation";
 import { getCoupleContext } from "@/lib/couple";
-import type { Activity, Response, ActivityEvent } from "@/lib/database.types";
+import type {
+  Activity,
+  Response,
+  ActivityEvent,
+  ActivityNote,
+} from "@/lib/database.types";
 import OdgovorDugmad from "@/components/OdgovorDugmad";
 import AkcijeAktivnosti from "@/components/AkcijeAktivnosti";
 import TerminSekcija from "@/components/TerminSekcija";
-import ZavrsiToggle from "@/components/ZavrsiToggle";
-import UspomenaField from "@/components/UspomenaField";
-import { barBackground, formatDatumVreme } from "@/lib/ui";
+import ZavrsiButton from "@/components/ZavrsiButton";
+import KomentarField from "@/components/KomentarField";
+import {
+  barBackground,
+  formatDatumVreme,
+  relativniDatum,
+} from "@/lib/ui";
 import {
   CATEGORY_EMOJI,
   CATEGORY_LABEL,
@@ -43,6 +52,15 @@ export default async function Detalj({
     .select("*")
     .eq("activity_id", id)
     .order("created_at", { ascending: true });
+
+  const { data: notesData } = await supabase
+    .from("activity_notes")
+    .select("*")
+    .eq("activity_id", id);
+  const notes = (notesData ?? []) as ActivityNote[];
+  const mojKomentar = notes.find((n) => n.user_id === userId)?.body ?? null;
+  const partnerKomentar =
+    notes.find((n) => n.user_id === partner?.id)?.body ?? null;
 
   const jaAutor = activity.created_by === userId;
   const mojOdgovor =
@@ -143,19 +161,46 @@ export default async function Detalj({
         />
       )}
 
-      {(activity.status === "accepted" ||
-        activity.status === "scheduled" ||
-        activity.status === "completed") && (
-        <section className="mt-6 flex flex-col gap-3 rounded-2xl border border-border bg-surface p-5">
-          <ZavrsiToggle
-            activityId={activity.id}
-            completed={activity.status === "completed"}
-          />
-          {activity.status === "completed" && (
-            <UspomenaField activityId={activity.id} initial={activity.memory} />
-          )}
-        </section>
-      )}
+      {userId &&
+        (activity.status === "accepted" ||
+          activity.status === "scheduled" ||
+          activity.status === "completed") && (
+          <section className="mt-6 flex flex-col gap-4 rounded-2xl border border-border bg-surface p-5">
+            <h2 className="font-display text-sm font-semibold uppercase tracking-wide text-muted">
+              {activity.status === "completed" ? "Urađeno" : "Kad završite"}
+            </h2>
+
+            {activity.status === "completed" && activity.completed_at && (
+              <p className="text-sm">
+                Urađeno {relativniDatum(activity.completed_at)}
+              </p>
+            )}
+
+            <KomentarField
+              activityId={activity.id}
+              userId={userId}
+              initial={mojKomentar}
+            />
+
+            {/* Komentar partnera — samo prikaz. */}
+            {partnerKomentar && (
+              <div className="flex flex-col gap-1">
+                <span className="text-sm text-muted">
+                  {imeOf(partner?.id ?? null)}
+                </span>
+                <p className="whitespace-pre-line rounded-xl bg-background px-3 py-2 text-sm">
+                  {partnerKomentar}
+                </p>
+              </div>
+            )}
+
+            <ZavrsiButton
+              activityId={activity.id}
+              scheduledAt={activity.scheduled_at}
+              completed={activity.status === "completed"}
+            />
+          </section>
+        )}
 
       <div className="mt-5">
         <AkcijeAktivnosti activityId={activity.id} status={activity.status} />

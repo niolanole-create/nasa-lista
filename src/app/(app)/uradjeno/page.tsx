@@ -1,14 +1,14 @@
 import Link from "next/link";
 import { getCoupleContext } from "@/lib/couple";
-import type { Activity } from "@/lib/database.types";
+import type { Activity, ActivityNote } from "@/lib/database.types";
 import Kartica from "@/components/Kartica";
-import ZavrsiToggle from "@/components/ZavrsiToggle";
-import UspomenaField from "@/components/UspomenaField";
+import ZavrsiButton from "@/components/ZavrsiButton";
+import KomentarField from "@/components/KomentarField";
 import { relativniDatum } from "@/lib/ui";
 
-// Sve što ste odradili — štiklirane aktivnosti sa kratkom uspomenom.
+// Sve što ste odradili — štiklirane aktivnosti sa komentarima (svako svoj).
 export default async function Uradjeno() {
-  const { supabase, members } = await getCoupleContext();
+  const { supabase, userId, partner, members } = await getCoupleContext();
 
   const { data } = await supabase
     .from("activities")
@@ -16,8 +16,24 @@ export default async function Uradjeno() {
     .eq("status", "completed");
 
   const uradjeno = ((data ?? []) as Activity[]).sort((a, b) =>
-    (b.completed_at ?? b.created_at).localeCompare(a.completed_at ?? a.created_at),
+    (b.completed_at ?? b.created_at).localeCompare(
+      a.completed_at ?? a.created_at,
+    ),
   );
+
+  const { data: notesData } = await supabase
+    .from("activity_notes")
+    .select("*")
+    .in(
+      "activity_id",
+      uradjeno.map((a) => a.id),
+    );
+  const notes = (notesData ?? []) as ActivityNote[];
+  const komentar = (activityId: string, uid: string | null) =>
+    notes.find((n) => n.activity_id === activityId && n.user_id === uid)?.body ??
+    null;
+  const imeOf = (uid: string | null) =>
+    members.find((m) => m.id === uid)?.display_name ?? "Partner";
 
   return (
     <main className="mx-auto w-full max-w-md flex-1 px-5 py-6">
@@ -38,19 +54,42 @@ export default async function Uradjeno() {
             .
           </p>
         ) : (
-          uradjeno.map((a) => (
-            <Kartica key={a.id} activity={a} members={members}>
-              <div className="flex flex-col gap-3">
-                {a.completed_at && (
-                  <p className="text-xs text-muted">
-                    urađeno {relativniDatum(a.completed_at)}
-                  </p>
-                )}
-                <UspomenaField activityId={a.id} initial={a.memory} />
-                <ZavrsiToggle activityId={a.id} completed />
-              </div>
-            </Kartica>
-          ))
+          uradjeno.map((a) => {
+            const partnerKomentar = komentar(a.id, partner?.id ?? null);
+            return (
+              <Kartica key={a.id} activity={a} members={members}>
+                <div className="flex flex-col gap-3">
+                  {a.completed_at && (
+                    <p className="text-xs text-muted">
+                      urađeno {relativniDatum(a.completed_at)}
+                    </p>
+                  )}
+                  {userId && (
+                    <KomentarField
+                      activityId={a.id}
+                      userId={userId}
+                      initial={komentar(a.id, userId)}
+                    />
+                  )}
+                  {partnerKomentar && (
+                    <div className="flex flex-col gap-1">
+                      <span className="text-sm text-muted">
+                        {imeOf(partner?.id ?? null)}
+                      </span>
+                      <p className="whitespace-pre-line rounded-xl bg-background px-3 py-2 text-sm">
+                        {partnerKomentar}
+                      </p>
+                    </div>
+                  )}
+                  <ZavrsiButton
+                    activityId={a.id}
+                    scheduledAt={a.scheduled_at}
+                    completed
+                  />
+                </div>
+              </Kartica>
+            );
+          })
         )}
       </div>
     </main>

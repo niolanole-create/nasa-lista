@@ -95,7 +95,6 @@ export interface Database {
           status: ActivityStatus;
           scheduled_at: string | null;
           completed_at: string | null;
-          memory: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -115,7 +114,6 @@ export interface Database {
           status?: ActivityStatus;
           scheduled_at?: string | null;
           completed_at?: string | null;
-          memory?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -132,7 +130,6 @@ export interface Database {
           status?: ActivityStatus;
           scheduled_at?: string | null;
           completed_at?: string | null;
-          memory?: string | null;
         };
         Relationships: [];
       };
@@ -209,6 +206,27 @@ export interface Database {
         };
         Relationships: [];
       };
+      activity_notes: {
+        Row: {
+          id: string;
+          activity_id: string;
+          user_id: string;
+          body: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          activity_id: string;
+          user_id?: string;
+          body?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          body?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -264,3 +282,5 @@ export type ActivityEvent =
   Database["public"]["Tables"]["activity_events"]["Row"];
 export type DateProposal =
   Database["public"]["Tables"]["date_proposals"]["Row"];
+export type ActivityNote =
+  Database["public"]["Tables"]["activity_notes"]["Row"];
