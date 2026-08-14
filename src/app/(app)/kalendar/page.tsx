@@ -13,17 +13,23 @@ export default async function KalendarStrana() {
 
   const sve = (data ?? []) as Activity[];
 
-  // Termini: zakazane i završene aktivnosti (obe imaju datum iz kalendara).
+  // Termini: zakazane i završene aktivnosti. Datum je planirani (scheduled_at),
+  // a za završene bez plana — datum kad su odrađene (completed_at).
   const termini = sve
-    .filter(
-      (a) =>
-        (a.status === "scheduled" || a.status === "completed") &&
-        a.scheduled_at,
-    )
     .map((a) => ({
+      activity: a,
+      kada:
+        a.status === "scheduled"
+          ? a.scheduled_at
+          : a.status === "completed"
+            ? (a.scheduled_at ?? a.completed_at)
+            : null,
+    }))
+    .filter((x) => x.kada)
+    .map(({ activity: a, kada }) => ({
       id: a.id,
       title: a.title,
-      scheduledAt: a.scheduled_at!,
+      scheduledAt: kada!,
       color: accentOf(a.created_by, members),
       done: a.status === "completed",
     }));

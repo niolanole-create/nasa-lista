@@ -170,11 +170,15 @@ export default async function Detalj({
               {activity.status === "completed" ? "Urađeno" : "Kad završite"}
             </h2>
 
-            {activity.status === "completed" && activity.completed_at && (
-              <p className="text-sm">
-                Urađeno {relativniDatum(activity.completed_at)}
-              </p>
-            )}
+            {activity.status === "completed" &&
+              (activity.scheduled_at ?? activity.completed_at) && (
+                <p className="text-sm">
+                  Urađeno{" "}
+                  {relativniDatum(
+                    (activity.scheduled_at ?? activity.completed_at)!,
+                  )}
+                </p>
+              )}
 
             <KomentarField
               activityId={activity.id}

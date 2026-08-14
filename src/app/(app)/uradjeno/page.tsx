@@ -59,9 +59,9 @@ export default async function Uradjeno() {
             return (
               <Kartica key={a.id} activity={a} members={members}>
                 <div className="flex flex-col gap-3">
-                  {a.completed_at && (
+                  {(a.scheduled_at ?? a.completed_at) && (
                     <p className="text-xs text-muted">
-                      urađeno {relativniDatum(a.completed_at)}
+                      urađeno {relativniDatum((a.scheduled_at ?? a.completed_at)!)}
                     </p>
                   )}
                   {userId && (
