@@ -36,13 +36,13 @@ export default function ZavrsiButton({
       type="button"
       onClick={prebaci}
       disabled={radim}
-      className={`min-h-[44px] rounded-xl px-4 text-sm font-medium disabled:opacity-60 ${
+      className={`min-h-[44px] rounded-xl border px-4 text-sm font-medium disabled:opacity-60 ${
         completed
-          ? "border border-border text-muted"
-          : "bg-accent-a text-white"
+          ? "border-border text-muted"
+          : "border-accent-a text-accent-a"
       }`}
     >
-      {completed ? "Vrati na listu" : "Aktivnost je urađena ✓"}
+      {completed ? "Vrati na listu" : "Označi kao urađeno"}
     </button>
   );
 }
