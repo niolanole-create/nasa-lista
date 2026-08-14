@@ -4,6 +4,8 @@ import type { Activity, Response, ActivityEvent } from "@/lib/database.types";
 import OdgovorDugmad from "@/components/OdgovorDugmad";
 import AkcijeAktivnosti from "@/components/AkcijeAktivnosti";
 import TerminSekcija from "@/components/TerminSekcija";
+import ZavrsiToggle from "@/components/ZavrsiToggle";
+import UspomenaField from "@/components/UspomenaField";
 import { barBackground, formatDatumVreme } from "@/lib/ui";
 import {
   CATEGORY_EMOJI,
@@ -139,6 +141,20 @@ export default async function Detalj({
           status={activity.status}
           scheduledAt={activity.scheduled_at}
         />
+      )}
+
+      {(activity.status === "accepted" ||
+        activity.status === "scheduled" ||
+        activity.status === "completed") && (
+        <section className="mt-6 flex flex-col gap-3 rounded-2xl border border-border bg-surface p-5">
+          <ZavrsiToggle
+            activityId={activity.id}
+            completed={activity.status === "completed"}
+          />
+          {activity.status === "completed" && (
+            <UspomenaField activityId={activity.id} initial={activity.memory} />
+          )}
+        </section>
       )}
 
       <div className="mt-5">

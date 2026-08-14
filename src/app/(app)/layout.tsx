@@ -34,6 +34,9 @@ export default async function AppLayout({
           <Link href="/ideje" className="text-muted hover:text-foreground">
             Ideje
           </Link>
+          <Link href="/uradjeno" className="text-muted hover:text-foreground">
+            Urađeno
+          </Link>
           <Link href="/kalendar" className="text-muted hover:text-foreground">
             Kalendar
           </Link>

@@ -95,6 +95,7 @@ export interface Database {
           status: ActivityStatus;
           scheduled_at: string | null;
           completed_at: string | null;
+          memory: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -114,6 +115,7 @@ export interface Database {
           status?: ActivityStatus;
           scheduled_at?: string | null;
           completed_at?: string | null;
+          memory?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -130,6 +132,7 @@ export interface Database {
           status?: ActivityStatus;
           scheduled_at?: string | null;
           completed_at?: string | null;
+          memory?: string | null;
         };
         Relationships: [];
       };

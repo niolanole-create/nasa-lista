@@ -3,6 +3,7 @@ import { getCoupleContext } from "@/lib/couple";
 import type { Activity, Response } from "@/lib/database.types";
 import Kartica from "@/components/Kartica";
 import OdgovorDugmad from "@/components/OdgovorDugmad";
+import ZavrsiToggle from "@/components/ZavrsiToggle";
 import { relativniDatum } from "@/lib/ui";
 
 type SaOdgovorima = Activity & { responses: Response[] };
@@ -95,9 +96,12 @@ export default async function Danas() {
         <Blok naslov="Zakazano">
           {zakazano.map((a) => (
             <Kartica key={a.id} activity={a} members={members}>
-              <p className="text-sm text-muted">
-                {relativniDatum(a.scheduled_at!)}
-              </p>
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-sm text-muted">
+                  {relativniDatum(a.scheduled_at!)}
+                </p>
+                <ZavrsiToggle activityId={a.id} completed={false} />
+              </div>
             </Kartica>
           ))}
         </Blok>

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -36,6 +37,14 @@ export default function AkcijeAktivnosti({
 
   return (
     <div className="flex flex-wrap gap-3">
+      {status !== "archived" && (
+        <Link
+          href={`/aktivnost/${activityId}/izmeni`}
+          className="min-h-[44px] rounded-xl border border-border px-4 text-sm font-medium leading-[44px]"
+        >
+          Izmeni
+        </Link>
+      )}
       {status === "declined" && (
         <button
           type="button"
