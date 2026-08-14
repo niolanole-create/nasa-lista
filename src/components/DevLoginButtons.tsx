@@ -5,10 +5,10 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 const DEV_USERS = [
-  { email: "ana@example.com", name: "Ana", accent: "#0F6B6B" },
-  { email: "marko@example.com", name: "Marko", accent: "#B0335F" },
+  { email: "marko@example.com", name: "Nikola", accent: "#B0335F" },
+  { email: "ana@example.com", name: "Jelena", accent: "#0F6B6B" },
 ];
-const DEV_PASSWORD = "dev12345";
+const DEV_PASSWORD = "sviđamiseNikolamnogo";
 
 export default function DevLoginButtons() {
   const router = useRouter();

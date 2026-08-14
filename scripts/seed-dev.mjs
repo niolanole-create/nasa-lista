@@ -1,4 +1,4 @@
-// Dev seed: pravi test-par (Ana i Marko) bez mejla. Idempotentno.
+// Dev seed: pravi test-par (Nikola i Jelena) bez mejla. Idempotentno.
 // Pokretanje:  node --env-file=.env.local scripts/seed-dev.mjs
 //
 // Kredencijali (samo za razvoj) koriste se na /dev/login.
@@ -18,11 +18,11 @@ const admin = createClient(URL, SERVICE, {
 });
 
 export const DEV_USERS = [
-  { email: "ana@example.com", name: "Ana", accent: "#0F6B6B" },
-  { email: "marko@example.com", name: "Marko", accent: "#B0335F" },
+  { email: "marko@example.com", name: "Nikola", accent: "#B0335F" },
+  { email: "ana@example.com", name: "Jelena", accent: "#0F6B6B" },
 ];
-const DEV_PASSWORD = "dev12345";
-const COUPLE_NAME = "Ana i Marko";
+const DEV_PASSWORD = "sviđamiseNikolamnogo";
+const COUPLE_NAME = "Nikola i Jelena";
 const INVITE_CODE = "ANAMARKO";
 
 async function findUserByEmail(email) {
