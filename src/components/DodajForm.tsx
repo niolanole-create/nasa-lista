@@ -18,7 +18,7 @@ export default function DodajForm() {
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState<Category>("izlazak");
   const [effort, setEffort] = useState<Effort>("treba_planirati");
-  const [cost, setCost] = useState("");
+  const [datum, setDatum] = useState("");
   const [locationName, setLocationName] = useState("");
   const [locationUrl, setLocationUrl] = useState("");
   const [referenceUrl, setReferenceUrl] = useState("");
@@ -31,17 +31,24 @@ export default function DodajForm() {
     setGreska(null);
 
     const supabase = createClient();
+    // Ako je unet datum, ideja ide odmah kao zakazana (podrazumevano veče, 19h).
+    const scheduledAt = datum
+      ? new Date(`${datum}T19:00`).toISOString()
+      : null;
     // couple_id i created_by popunjavaju DB default-i (current_couple_id / auth.uid).
+    // status: DB default je 'accepted' (ideja odmah na listi); datum je zakazuje.
     const { error } = await supabase.from("activities").insert({
       title: title.trim(),
       description: description.trim() || null,
       category,
       effort,
-      estimated_cost: cost ? Number(cost) : null,
       location_name: locationName.trim() || null,
       location_url: locationUrl.trim() || null,
       reference_url: referenceUrl.trim() || null,
       deadline: deadline || null,
+      ...(scheduledAt
+        ? { status: "scheduled", scheduled_at: scheduledAt }
+        : {}),
     });
 
     if (error) {
@@ -121,16 +128,14 @@ export default function DodajForm() {
 
       <div className="grid grid-cols-2 gap-3">
         <div className="flex flex-col gap-2">
-          <label htmlFor="cost" className="text-sm text-muted">
-            Okvirni trošak (RSD)
+          <label htmlFor="datum" className="text-sm text-muted">
+            Datum (opciono)
           </label>
           <input
-            id="cost"
-            type="number"
-            inputMode="numeric"
-            min={0}
-            value={cost}
-            onChange={(e) => setCost(e.target.value)}
+            id="datum"
+            type="date"
+            value={datum}
+            onChange={(e) => setDatum(e.target.value)}
             className={polje}
           />
         </div>
@@ -194,7 +199,7 @@ export default function DodajForm() {
         disabled={radim}
         className="mt-2 min-h-[48px] rounded-xl bg-accent-a px-4 font-medium text-white transition-opacity disabled:opacity-60"
       >
-        {radim ? "Dodajem…" : "Predloži ideju"}
+        {radim ? "Dodajem…" : "Dodaj na listu"}
       </button>
       {greska && <p className="text-sm text-accent-b">{greska}</p>}
     </form>

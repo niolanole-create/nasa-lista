@@ -1,12 +1,7 @@
 import Link from "next/link";
 import type { Activity, Profile } from "@/lib/database.types";
 import { barBackground, relativniDatum } from "@/lib/ui";
-import {
-  CATEGORY_EMOJI,
-  CATEGORY_LABEL,
-  EFFORT_LABEL,
-  formatRsd,
-} from "@/lib/enums";
+import { CATEGORY_EMOJI, CATEGORY_LABEL, EFFORT_LABEL } from "@/lib/enums";
 
 type Props = {
   activity: Activity;
@@ -17,7 +12,6 @@ type Props = {
 // Kartica aktivnosti sa akcentnom trakom predlagača (ili gradijentom kad je „naše").
 export default function Kartica({ activity, members, children }: Props) {
   const predlagac = members.find((m) => m.id === activity.created_by);
-  const cost = formatRsd(activity.estimated_cost);
 
   return (
     <article className="relative overflow-hidden rounded-2xl border border-border bg-surface">
@@ -44,14 +38,13 @@ export default function Kartica({ activity, members, children }: Props) {
           <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
             <span>{CATEGORY_LABEL[activity.category]}</span>
             <span>· {EFFORT_LABEL[activity.effort]}</span>
-            {cost && <span>· {cost}</span>}
             {activity.deadline && (
               <span className="text-warning">
                 · rok {relativniDatum(activity.deadline)}
               </span>
             )}
             {predlagac?.display_name && (
-              <span>· predložio/la {predlagac.display_name}</span>
+              <span>· dodao/la {predlagac.display_name}</span>
             )}
           </div>
         </Link>

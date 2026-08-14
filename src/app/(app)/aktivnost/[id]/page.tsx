@@ -1,11 +1,6 @@
 import { notFound } from "next/navigation";
 import { getCoupleContext } from "@/lib/couple";
-import type {
-  Activity,
-  Response,
-  ActivityEvent,
-  DateProposal,
-} from "@/lib/database.types";
+import type { Activity, Response, ActivityEvent } from "@/lib/database.types";
 import OdgovorDugmad from "@/components/OdgovorDugmad";
 import AkcijeAktivnosti from "@/components/AkcijeAktivnosti";
 import TerminSekcija from "@/components/TerminSekcija";
@@ -15,7 +10,6 @@ import {
   CATEGORY_LABEL,
   EFFORT_LABEL,
   STATUS_LABEL,
-  formatRsd,
 } from "@/lib/enums";
 
 const RESP_LABEL: Record<string, string> = {
@@ -48,13 +42,6 @@ export default async function Detalj({
     .eq("activity_id", id)
     .order("created_at", { ascending: true });
 
-  const { data: proposalsData } = await supabase
-    .from("date_proposals")
-    .select("*")
-    .eq("activity_id", id)
-    .order("created_at", { ascending: false });
-  const proposals = (proposalsData ?? []) as DateProposal[];
-
   const jaAutor = activity.created_by === userId;
   const mojOdgovor =
     activity.responses.find((r) => r.user_id === userId)?.response ?? null;
@@ -66,16 +53,14 @@ export default async function Detalj({
 
   // Poruka o trenutnom stanju (spec sekcija 4.4).
   let poruka = STATUS_LABEL[activity.status];
-  if (activity.status === "proposed") {
-    if (jaAutor) poruka = `Čeka ${imeOf(partner?.id ?? null)} da odgovori`;
-    else if (mojOdgovor === "maybe") poruka = "Rekao/la si: možda kasnije";
-    else poruka = "Čeka tvoj odgovor";
-  } else if (activity.status === "accepted") {
-    poruka = "Oboje hoćete — dogovorite termin";
+  if (activity.status === "accepted") {
+    poruka = "Na listi — postavi datum kad želite";
   }
 
-  const cost = formatRsd(activity.estimated_cost);
-  const mozeDaOdgovori = activity.status === "proposed" && !jaAutor;
+  // Reakcije su moguće na tuđu ideju (autor ne glasa na svoju).
+  const mozeDaOdgovori =
+    (activity.status === "proposed" || activity.status === "accepted") &&
+    !jaAutor;
 
   return (
     <main className="mx-auto w-full max-w-md flex-1 px-5 py-6">
@@ -108,8 +93,7 @@ export default async function Detalj({
           <dl className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted">
             <span>{CATEGORY_LABEL[activity.category]}</span>
             <span>· {EFFORT_LABEL[activity.effort]}</span>
-            {cost && <span>· {cost}</span>}
-            <span>· predložio/la {imeOf(activity.created_by)}</span>
+            <span>· dodao/la {imeOf(activity.created_by)}</span>
           </dl>
 
           {(activity.location_url || activity.reference_url) && (
@@ -149,17 +133,13 @@ export default async function Detalj({
         </div>
       </article>
 
-      {(activity.status === "accepted" || activity.status === "scheduled") &&
-        userId && (
-          <TerminSekcija
-            activityId={activity.id}
-            status={activity.status}
-            scheduledAt={activity.scheduled_at}
-            userId={userId}
-            proposals={proposals}
-            members={members}
-          />
-        )}
+      {(activity.status === "accepted" || activity.status === "scheduled") && (
+        <TerminSekcija
+          activityId={activity.id}
+          status={activity.status}
+          scheduledAt={activity.scheduled_at}
+        />
+      )}
 
       <div className="mt-5">
         <AkcijeAktivnosti activityId={activity.id} status={activity.status} />
@@ -174,7 +154,7 @@ export default async function Detalj({
             const ko = imeOf(e.actor_id);
             const p = (e.payload ?? {}) as Record<string, string>;
             let tekst = e.event_type;
-            if (e.event_type === "created") tekst = `${ko} je predložio/la`;
+            if (e.event_type === "created") tekst = `${ko} je dodao/la`;
             else if (e.event_type === "responded")
               tekst = `${ko}: ${RESP_LABEL[p.response] ?? p.response}`;
             else if (e.event_type === "status_changed")

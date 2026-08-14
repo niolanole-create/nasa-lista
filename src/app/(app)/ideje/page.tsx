@@ -46,7 +46,7 @@ export default async function Ideje({ searchParams }: { searchParams: SP }) {
         Naše ideje
       </h1>
       <p className="mt-1 text-sm text-muted">
-        Sve što oboje želite — čeka da se dogovori termin.
+        Sve vaše ideje na jednom mestu — dodajte datum kad se dogovorite.
       </p>
 
       <div className="mt-5">
@@ -60,9 +60,9 @@ export default async function Ideje({ searchParams }: { searchParams: SP }) {
       <div className="mt-5 flex flex-col gap-3">
         {ideje.length === 0 ? (
           <p className="rounded-2xl border border-dashed border-border p-8 text-center text-muted">
-            Ništa ovde još. Kad oboje kažete „da” nekoj ideji, sleti ovamo.{" "}
+            Još nema ideja.{" "}
             <Link href="/dodaj" className="text-accent-a underline">
-              Dodaj ideju
+              Dodaj prvu
             </Link>
             .
           </p>

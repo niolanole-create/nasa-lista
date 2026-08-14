@@ -52,7 +52,7 @@ export default function PodesavanjaForm({ displayName, accentColor }: Props) {
             setIme(e.target.value);
             setStanje("idle");
           }}
-          placeholder="npr. Ana"
+          placeholder="npr. Jelena"
           className="min-h-[44px] rounded-xl border border-border bg-surface px-4 text-base outline-none focus:border-accent-a"
         />
       </div>
